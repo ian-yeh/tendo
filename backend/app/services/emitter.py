@@ -20,8 +20,15 @@ class EventEmitter:
             self.loop
         )
     
-    def emit_action(self, action: Action) -> None:
-        """Emit an action event and store it."""
+    def emit_action(self, action_type: str, element: str, reasoning: str | None, screenshot: str | None) -> None:
+        """Create, store, and emit an action event."""
+        action = Action(
+            type=action_type,
+            element=element,
+            reasoning=reasoning,
+            screenshot=screenshot,
+            timestamp=datetime.now()
+        )
         store.add_action(self.room_id, action)
         action_dict = action.model_dump()
         self._emit('action', action_dict)

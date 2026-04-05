@@ -1,81 +1,48 @@
-# Agent Guidelines
+# AI Agent Development Guidelines (AGENTS.md)
 
-## Commit Messages
+This project is built to be "Agent-First." These guidelines help AI coding assistants (like Gemini, Perplexity, or Antigravity) understand how to best contribute to the codebase.
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/) for clear and structured commit history.
+## Project Structure (Monorepo)
 
-### Format
+- `apps/api`: Python FastAPI backend.
+  - Handles Gemini Vision API interactions.
+  - Manages Playwright browser instances.
+  - Uses Socket.io for real-time updates.
+- `apps/web`: Next.js frontend (Next.js 15, App Router).
+  - Displays the live test feed and action history.
+  - Provides the interactive UI for starting tests.
+- `apps/cli`: TypeScript CLI tool.
+  - Terminal interface for running live test feeds for UI/UX testing.
 
-```
-<type>: <description>
+## Core Philosophical Principles
 
-[optional body]
+1.  **Aesthetics Matter**: ALL UI elements must look premium, modern, and high-fidelity. No placeholders. Use full-color palettes, smooth transitions, and rich typography.
+2.  **Safety First**: Never run destructive commands without double-checking context.
+3.  **Conventionality**: Follow the repository's `CONVENTIONAL_COMMITS.md` for all commits.
+4.  **No Placeholders**: If you need an image, generate it. If you need a component, build it fully with logic.
 
-[optional footer(s)]
-```
+## Developing for the Agent Loop
 
-### Types
+The `apps/api/app/services/agent.py` file is the brain of the system.
+- It converts high-level user instructions into discrete browser actions.
+- It uses screenshots + Gemini Vision to perceive the current state.
+- Focus on making the agent more resilient (e.g., handling pop-ups, retrying on failure).
 
-| Type     | Description                                          | Example                                      |
-|----------|------------------------------------------------------|----------------------------------------------|
-| `feat`   | A new feature or functionality                       | `feat: add user authentication`              |
-| `fix`    | A bug fix                                            | `fix: resolve login redirect issue`          |
-| `bug`    | Bug-related changes (alternative to fix)             | `bug: correct validation error on signup`    |
-| `chore`  | Maintenance tasks, build changes, dependencies       | `chore: update dependencies`                 |
-| `doc`    | Documentation changes only                          | `doc: add API usage examples`                |
+## Key Development Workflows
 
-### Rules
+### 1. Adding a New Feature
+- Always start with a `PLAN.md` or implementation plan.
+- Update the `task.md` frequently.
+- Ensure cross-repo compatibility (if changing the API, update `web` and `cli`).
 
-- **Description**: Use lowercase, present tense, no period at the end
-- **Body**: Explain what and why, not how (when needed)
-- **Breaking changes**: Add `!` after type or include `BREAKING CHANGE:` in footer
+### 2. Commit Message Structure
+Follow the format: `type(scope): description`
+Scopes: `api`, `web`, `cli`, `core`
 
-### Examples
-
-```
-feat: implement dark mode toggle
-
-feat!: redesign dashboard layout
-
-fix: prevent crash on empty input array
-
-doc: update README with environment setup
-
-chore: bump typescript to v5.4
-```
+## Tool Usage for Agents
+- **Browser Tool**: Use it to verify UI changes in development.
+- **Search Web**: Use it to find latest API documentation for libraries like `commander` or `@clack/prompts`.
+- **Grep**: Use it to find existing patterns before implementing new ones.
 
 ---
-
-## Folder Structure
-
-```
-.
-├── .vscode/                # VS Code configuration
-├── apps/
-│   ├── api/                # Python FastAPI backend
-│   │   ├── app/
-│   │   │   ├── routes/     # API route handlers
-│   │   │   └── services/   # Business logic services
-│   │   └── ...
-│   └── web/                # Next.js frontend
-│       ├── app/            # Next.js App Router
-│       │   └── (root)/       # Route group
-│       │       └── test/
-│       │           └── [sessionId]/
-│       ├── components/
-│       │   ├── landing/    # Landing page components
-│       │   └── ui/         # Shared UI components
-│       ├── hooks/          # Custom React hooks
-│       ├── lib/            # Utility functions
-│       └── public/         # Static assets
-├── .gitignore
-├── AGENTS.md               # This file
-└── README.md
-```
-
-### Guidelines
-
-- **Flat is better than nested** — avoid deep folder hierarchies
-- **Colocate related files** — keep tests, styles, and types close to their components
-- **Domain-based grouping** — organize by feature/domain when projects scale
-
+*Built for humans, refined by agents.*

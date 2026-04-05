@@ -1,32 +1,22 @@
-# Testpilot: Autonomous E2E Testing Agent
+# Tendu 
+*French for "stretched" — a ballet term for extending with precision.*
 
-A AI-powered visual testing tool for web apps. Users describe tests in plain English, Playwright runs the actions and captures screenshots, and Gemini evaluates whether the flow worked correctly.
+Tendu is an autonomous QA agent that tests your web app the way a person would.
+You describe what should happen in plain English. Tendu opens a browser,
+figures out how to do it, and tells you whether it worked.
 
-### Tech stack.
-Frontend: Next.js, TypeScript
-Backend: Python, FastAPI
-Browser Automation: Playwright (Python)
-Real-Time Streaming: Socket.io
-AI/LLM: Google Gemini Vision API
+No test scripts. No selectors. No maintenance.
 
-This project was built at Hack Western 2025. 
+### What it does You give Tendu a URL and a prompt like "add an item to the
+cart and check out". It takes it from there, navigating, clicking, typing,
+scrolling, and at each step, it looks at what's actually on the screen to
+decide what to do next. When it's done, it tells you whether the flow succeeded
+or where it broke. It's less like a test runner and more like a QA engineer who
+never gets tired.
 
-### How it works.
+### Why Most E2E testing tools require you to write and maintain brittle
+scripts that break every time your UI changes. Tendu describes intent, not
+implementation. If your button moves, Tendu adapts. If your flow changes, you
+update one sentence.
 
-1. User inputs a URL and a test prompt.
-2. Backend starts a Playwright browser instance and navigates to the URL.
-3. Backend starts an agent loop that:
-    a. Captures a screenshot of the current page.
-    b. Sends the screenshot, URL, and test prompt to Gemini Vision API.
-    c. Gemini returns an action (e.g., "click", "type", "scroll") and arguments.
-    d. Backend executes the action using Playwright.
-    e. Backend sends the new screenshot and action details to the frontend.
-4. This loop continues until Gemini decides the test is complete or a timeout is reached.
-5. Frontend displays the test session in a split-view with the live browser and action history.
-
-### How to run.
-
-1. Run `npm install` in the `apps/web` directory.
-2. Run `pip install -r requirements.txt` in the `apps/api` directory.
-3. Run `npm run dev` in the `apps/web` directory.
-4. Run `uvicorn app.main:socket_app --reload --port 8000` in the `apps/api` directory.
+*built by* Ian Yeh

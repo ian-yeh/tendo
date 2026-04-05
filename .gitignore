@@ -2,8 +2,8 @@
 # Dependencies
 # ================================
 node_modules/
-frontend/node_modules/
-backend/node_modules/
+apps/web/node_modules/
+apps/api/node_modules/
 .pnp/
 .pnp.js
 
@@ -13,9 +13,9 @@ backend/node_modules/
 dist/
 build/
 out/
-frontend/.next/
-frontend/out/
-backend/dist/
+apps/web/.next/
+apps/web/out/
+apps/api/dist/
 *.tsbuildinfo
 
 # ================================
@@ -28,8 +28,8 @@ backend/dist/
 .env.test.local
 .env.production
 .env.production.local
-frontend/.env*
-backend/.env*
+apps/web/.env*
+apps/api/.env*
 
 # ================================
 # Logs
@@ -45,8 +45,8 @@ pnpm-debug.log*
 # Testing & Coverage
 # ================================
 coverage/
-frontend/coverage/
-backend/coverage/
+apps/web/coverage/
+apps/api/coverage/
 .nyc_output/
 *.lcov
 playwright-report/
@@ -55,8 +55,8 @@ test-results/
 # ================================
 # Playwright / Browser Automation
 # ================================
-frontend/playwright/.cache/
-backend/playwright/.cache/
+apps/web/playwright/.cache/
+apps/api/playwright/.cache/
 screenshots/
 recordings/
 *.webm
@@ -126,8 +126,8 @@ secrets/
 # ================================
 *.generated.*
 generated/
-frontend/src/generated/
-backend/src/generated/
+apps/web/src/generated/
+apps/api/src/generated/
 
 # ================================
 # Uploads & User Content
@@ -135,8 +135,8 @@ backend/src/generated/
 uploads/
 tmp/
 temp/
-backend/uploads/
-backend/tmp/
+apps/api/uploads/
+apps/api/tmp/
 
 # ================================
 # Misc

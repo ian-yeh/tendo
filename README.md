@@ -26,7 +26,7 @@ This project was built at Hack Western 2025.
 
 ### How to run.
 
-1. Run `npm install` in the `frontend` directory.
-2. Run `pip install -r requirements.txt` in the `backend` directory.
-3. Run `npm run dev` in the `frontend` directory.
-4. Run `uvicorn app.main:socket_app --reload --port 8000` in the `backend` directory.
+1. Run `npm install` in the `apps/web` directory.
+2. Run `pip install -r requirements.txt` in the `apps/api` directory.
+3. Run `npm run dev` in the `apps/web` directory.
+4. Run `uvicorn app.main:socket_app --reload --port 8000` in the `apps/api` directory.

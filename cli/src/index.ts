@@ -17,8 +17,7 @@ program
   .argument('<name>', 'The name to greet')
   .action((name) => {
     //p.intro(`${color.bgCyan(color.black(' testpilot-cli '))}`);
-    p.log.step(`Hello, ${color.cyan(name)}!`);
-    p.outro(color.green('Command completed.'));
+    p.log.success(`Hello, ${color.cyan(name)}!`);
   });
 
 program
@@ -27,8 +26,7 @@ program
   .argument('<name>', 'The name to say goodbye to')
   .action((name) => {
     //p.intro(`${color.bgCyan(color.black(' testpilot-cli '))}`);
-    p.log.step(`Goodbye, ${color.cyan(name)}!`);
-    p.outro(color.green('Command completed.'));
+    p.log.success(`Goodbye, ${color.cyan(name)}!`);
   });
 
 program.parse();

@@ -13,6 +13,7 @@ This project is built to be "Agent-First." These guidelines help AI coding assis
   - Provides the interactive UI for starting tests.
 - `apps/cli`: TypeScript CLI tool.
   - Terminal interface for running live test feeds for UI/UX testing.
+  - **Current State:** Contains a built-in Playwright web scraping layer (`src/scraper`) for robust static and dynamic content extraction. The `test` command is refactored to extract core website elements (titles, headings, paragraphs, buttons) from user-provided URLs with robust error handling and proxy support.
 
 ## Core Philosophical Principles
 

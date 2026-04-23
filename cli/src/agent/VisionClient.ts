@@ -1,7 +1,7 @@
 // cli/src/agent/VisionClient.ts
 
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import type { AgentConfig, Action, PageContext, VisionDecision } from './types.js';
+import type { AgentConfig, PageContext, VisionDecision } from './types.js';
 
 export class VisionClient {
   private model;
@@ -32,9 +32,13 @@ export class VisionClient {
                   type: SchemaType.STRING,
                   description: 'The type of action to perform: click, type, scroll, wait, navigate, done, or fail',
                 },
-                selector: {
-                  type: SchemaType.STRING,
-                  description: 'CSS selector for the element to interact with (for click, type)',
+                x: {
+                  type: SchemaType.NUMBER,
+                  description: 'X pixel coordinate of the target element center in the screenshot',
+                },
+                y: {
+                  type: SchemaType.NUMBER,
+                  description: 'Y pixel coordinate of the target element center in the screenshot',
                 },
                 text: {
                   type: SchemaType.STRING,
@@ -95,7 +99,7 @@ export class VisionClient {
     actionHistory: string[],
     remainingSteps: number,
   ): string {
-    return `You are an autonomous QA testing agent. Analyze the current page state and decide the next action to complete the user's instruction.
+    return `You are an autonomous QA testing agent that interacts with web pages using VISUAL PERCEPTION. You look at a screenshot and decide where to click by identifying pixel coordinates — you do NOT use CSS selectors or DOM queries.
 
 **USER'S INSTRUCTION:**
 "${instruction}"
@@ -103,40 +107,42 @@ export class VisionClient {
 **CURRENT STATE:**
 - Page Title: ${context.pageTitle}
 - URL: ${context.currentUrl}
+- Viewport: 1920×1080
 - Remaining Steps: ${remainingSteps}
 
-**PAGE ELEMENTS:**
-${context.visibleElements.join('\n') || 'No visible interactive elements detected'}
+**VISIBLE ELEMENTS (supplementary context):**
+${context.visibleElements.join('\n') || 'No interactive elements detected via DOM scan'}
 
 **ACTION HISTORY:**
 ${actionHistory.length === 0 ? 'No actions taken yet.' : actionHistory.map((a, i) => `${i + 1}. ${a}`).join('\n')}
 
 **INSTRUCTIONS:**
-1. Analyze the screenshot and visible elements to understand the current state
-2. Identify what needs to be done to complete the task
-3. Choose ONE action from: click, type, scroll, wait, navigate, done, fail
+1. Study the screenshot carefully to understand what is visible on screen
+2. Identify the element you need to interact with by its visual appearance and position
+3. Estimate the CENTER (x, y) pixel coordinates of that element in the screenshot
+4. Choose ONE action from: click, type, scroll, wait, navigate, done, fail
 
 **ACTION GUIDELINES:**
-- click: Use a specific, stable CSS selector. Prefer ID or unique class.
-- type: Provide both selector and text to type
-- scroll: Specify direction (up/down) and amount in pixels
-- wait: Use when page is loading or after an action needs time to complete
-- navigate: Provide full URL to navigate to
-- done: Use when the task is successfully completed
-- fail: Use only when the task cannot be completed (e.g., blocked, missing elements)
+- click: Provide the (x, y) center of the element you want to click
+- type: Provide the (x, y) center of the input field, plus the text to type. The field will be clicked first, then the text will be entered
+- scroll: Specify direction (up/down/left/right) and amount in pixels
+- wait: Use when the page is loading or needs time to settle
+- navigate: Provide a full URL to navigate to
+- done: Use when the task is fully and successfully completed. Include a message summarizing the result
+- fail: Use only when the task genuinely cannot be completed
 
-**IMPORTANT:**
-- Respond ONLY with the JSON format specified
-- Choose the most specific selector possible
-- If you can't complete the task after reasonable attempts, use "fail"
-- The viewport is 1920x1080, elements below the fold may require scrolling`;
+**COORDINATE RULES:**
+- The screenshot is exactly 1920×1080 pixels
+- (0, 0) is the top-left corner
+- Estimate the CENTER of the target element, not its edge
+- Be precise — a click at the wrong coordinates will miss the target
+- If you can't complete the task after reasonable attempts, use "fail"`;
   }
 
   private parseResponse(responseText: string): VisionDecision {
     try {
       return JSON.parse(responseText);
     } catch {
-      // Fallback: extract JSON from markdown fences
       const jsonMatch =
         responseText.match(/```json\n?([\s\S]*?)\n?```/) ||
         responseText.match(/\{[\s\S]*\}/);

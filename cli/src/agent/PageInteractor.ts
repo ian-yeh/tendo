@@ -99,23 +99,20 @@ export class PageInteractor {
   async executeAction(action: Action): Promise<void> {
     switch (action.type) {
       case 'click': {
-        if (!action.selector) throw new Error('Click action requires selector');
-        try {
-          await this.page.locator(action.selector).first().click({ timeout: 5000 });
-          await this.page.waitForTimeout(500);
-        } catch {
-          // Fallback to JS click
-          await this.page.evaluate((sel: string) => {
-            const el = document.querySelector(sel);
-            if (el) (el as HTMLElement).click();
-          }, action.selector);
-        }
+        if (action.x == null || action.y == null) throw new Error('Click action requires x, y coordinates');
+        await this.page.mouse.click(action.x, action.y);
+        await this.page.waitForTimeout(500);
         break;
       }
 
       case 'type': {
-        if (!action.selector || !action.text) throw new Error('Type action requires selector and text');
-        await this.page.locator(action.selector).first().fill(action.text);
+        if (action.x == null || action.y == null || !action.text) {
+          throw new Error('Type action requires x, y coordinates and text');
+        }
+        // Click the input field first, then type character by character
+        await this.page.mouse.click(action.x, action.y);
+        await this.page.waitForTimeout(200);
+        await this.page.keyboard.type(action.text, { delay: 50 });
         break;
       }
 
@@ -147,7 +144,6 @@ export class PageInteractor {
 
       case 'done':
       case 'fail':
-        // Terminal states — nothing to execute
         break;
 
       default:

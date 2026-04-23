@@ -27,7 +27,8 @@ export type ActionType =
 
 export interface Action {
   type: ActionType;
-  selector?: string;
+  x?: number;
+  y?: number;
   text?: string;
   direction?: 'up' | 'down' | 'left' | 'right';
   amount?: number;

@@ -77,18 +77,36 @@ export class VisionClient {
     remainingSteps: number,
   ): Promise<VisionDecision> {
     const prompt = this.buildPrompt(instruction, context, actionHistory, remainingSteps);
-
-    const result = await this.model.generateContent([
+    const content = [
       prompt,
       {
         inlineData: {
-          mimeType: 'image/jpeg',
+          mimeType: 'image/jpeg' as const,
           data: context.screenshotBase64,
         },
       },
-    ]);
+    ];
 
-    return this.parseResponse(result.response.text());
+    // Retry with exponential backoff for transient API errors (503, rate limits)
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await this.model.generateContent(content);
+        return this.parseResponse(result.response.text());
+      } catch (error) {
+        const message = (error as Error).message || '';
+        const isRetryable = message.includes('503') || message.includes('429') || message.includes('overloaded');
+
+        if (isRetryable && attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error('Unreachable');
   }
 
   // ── Private ──────────────────────────────────────────────────────

@@ -1,5 +1,28 @@
-import { chromium, firefox, webkit, Browser, BrowserContext, Page } from 'playwright';
-import type { BrowserPoolConfig, ProxyConfig, ViewportConfig } from '../types/index.js';
+// cli/src/agent/BrowserPool.ts
+
+import { chromium, Browser, BrowserContext, Page } from 'playwright';
+
+// ── Types ────────────────────────────────────────────────────────────
+
+export interface BrowserPoolConfig {
+  maxBrowsers?: number;
+  maxPagesPerBrowser?: number;
+  launchOptions?: Record<string, unknown>;
+  persistent?: boolean;
+}
+
+export interface ProxyConfig {
+  server: string;
+  username?: string;
+  password?: string;
+}
+
+export interface ViewportConfig {
+  width: number;
+  height: number;
+}
+
+// ── Pool Internals ───────────────────────────────────────────────────
 
 interface PooledBrowser {
   browser: Browser;
@@ -8,10 +31,8 @@ interface PooledBrowser {
   lastUsed: Date;
 }
 
-/**
- * Manages a pool of browser instances for concurrent scraping operations.
- * Implements connection pooling and resource management.
- */
+// ── BrowserPool ──────────────────────────────────────────────────────
+
 export class BrowserPool {
   private browsers: Map<string, PooledBrowser> = new Map();
   private config: Required<BrowserPoolConfig>;
@@ -29,18 +50,12 @@ export class BrowserPool {
     this.startCleanupInterval();
   }
 
-  /**
-   * Initialize the pool with a minimum number of browsers
-   */
   async initialize(minBrowsers = 1): Promise<void> {
     for (let i = 0; i < Math.min(minBrowsers, this.config.maxBrowsers); i++) {
       await this.createBrowser();
     }
   }
 
-  /**
-   * Acquire a page from the pool
-   */
   async acquirePage(options: {
     headless?: boolean;
     proxy?: ProxyConfig;
@@ -49,7 +64,6 @@ export class BrowserPool {
   } = {}): Promise<{ page: Page; release: () => Promise<void> }> {
     const { headless = true, proxy, viewport, userAgent } = options;
 
-    // Find or create browser with available capacity
     let pooledBrowser = this.findAvailableBrowser();
     
     if (!pooledBrowser) {
@@ -59,7 +73,6 @@ export class BrowserPool {
       pooledBrowser = await this.createBrowser({ headless, proxy });
     }
 
-    // Create context with options
     const contextId = `ctx_${++this.usageCount}`;
     const context = await pooledBrowser.browser.newContext({
       viewport: viewport ?? { width: 1920, height: 1080 },
@@ -73,12 +86,10 @@ export class BrowserPool {
 
     pooledBrowser.contexts.set(contextId, context);
 
-    // Create page
     const pageId = `page_${++this.usageCount}`;
     const page = await context.newPage();
     pooledBrowser.pages.set(pageId, page);
 
-    // Setup error handling
     page.on('close', () => {
       // Handle close
     });
@@ -87,7 +98,6 @@ export class BrowserPool {
       console.error(`Page error event: ${err.message}`);
     });
 
-    // Release function
     const release = async () => {
       try {
         await page.close();
@@ -104,9 +114,6 @@ export class BrowserPool {
     return { page, release };
   }
 
-  /**
-   * Create a new browser instance
-   */
   private async createBrowser(options: { headless?: boolean; proxy?: ProxyConfig } = {}): Promise<PooledBrowser> {
     const browserId = `browser_${++this.usageCount}`;
     
@@ -126,9 +133,6 @@ export class BrowserPool {
     return pooledBrowser;
   }
 
-  /**
-   * Find a browser with available page capacity
-   */
   private findAvailableBrowser(): PooledBrowser | undefined {
     for (const [, pooledBrowser] of this.browsers) {
       if (pooledBrowser.pages.size < this.config.maxPagesPerBrowser) {
@@ -138,9 +142,6 @@ export class BrowserPool {
     return undefined;
   }
 
-  /**
-   * Get current pool statistics
-   */
   getStats(): { browsers: number; contexts: number; pages: number } {
     let contexts = 0;
     let pages = 0;
@@ -153,18 +154,12 @@ export class BrowserPool {
     return { browsers: this.browsers.size, contexts, pages };
   }
 
-  /**
-   * Start cleanup interval for idle browsers
-   */
   private startCleanupInterval(): void {
     this.cleanupInterval = setInterval(() => {
       this.cleanupIdleBrowsers();
-    }, 60000); // Check every minute
+    }, 60000);
   }
 
-  /**
-   * Remove idle browsers
-   */
   private cleanupIdleBrowsers(maxIdleMs = 300000): void {
     const now = Date.now();
     
@@ -176,9 +171,6 @@ export class BrowserPool {
     }
   }
 
-  /**
-   * Close all browsers and cleanup
-   */
   async dispose(): Promise<void> {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
@@ -187,17 +179,14 @@ export class BrowserPool {
     const closePromises: Promise<void>[] = [];
     
     for (const [, pooledBrowser] of this.browsers) {
-      // Close all pages
       for (const [, page] of pooledBrowser.pages) {
         closePromises.push(page.close());
       }
       
-      // Close all contexts
       for (const [, context] of pooledBrowser.contexts) {
         closePromises.push(context.close());
       }
       
-      // Close browser
       closePromises.push(pooledBrowser.browser.close());
     }
 

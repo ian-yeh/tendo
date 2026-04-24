@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import 'dotenv/config';
+
 import { Command } from 'commander';
 import * as p from '@clack/prompts';
 import color from 'picocolors';
@@ -13,8 +15,8 @@ import { configCommand } from './commands/config.js';
 const program = new Command();
 
 program
-  .name('tendu')
-  .description('Tendu CLI — autonomous QA agent for UX flow testing')
+  .name('tendo')
+  .description('Tendo CLI — autonomous QA agent for UX flow testing')
   .version('1.0.0');
 
 program.addCommand(testCommand);

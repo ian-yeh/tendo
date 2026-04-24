@@ -1,5 +1,3 @@
-// cli/src/agent/types.ts
-
 import type { Page } from 'playwright';
 
 // ── Agent Configuration ──────────────────────────────────────────────

@@ -90,12 +90,19 @@ export const watchCommand = new Command()
       p.log.error(color.red(`  Error: ${error.message}`));
     });
 
-    const finalState = await runner.run({
-      url: targetUrl,
-      prompt: options.prompt,
-      headless: false,
-      viewport,
-    });
+    let finalState;
+    try {
+      finalState = await runner.run({
+        url: targetUrl,
+        prompt: options.prompt,
+        headless: false,
+        viewport,
+      });
+    } catch (error) {
+      p.log.error(color.red(`Fatal error: ${(error as Error).message}`));
+      p.outro('Watch aborted.');
+      process.exit(1);
+    }
 
     // Save summary
     const summary = {
@@ -103,7 +110,9 @@ export const watchCommand = new Command()
       prompt: options.prompt,
       success: finalState.success,
       steps: finalState.step,
-      actions: finalState.actions.map(a => JSON.parse(a)),
+      actions: finalState.actions.flatMap(a => {
+        try { return [JSON.parse(a)]; } catch { return []; }
+      }),
       timestamp: new Date().toISOString(),
     };
     fs.writeFileSync(path.join(runDir, 'summary.json'), JSON.stringify(summary, null, 2));

@@ -42,12 +42,22 @@ export class AgentRunner extends EventEmitter {
   private consecutiveRepeats(): number {
     if (this.state.actions.length < 2) return 0;
 
-    const last = JSON.parse(this.state.actions[this.state.actions.length - 1]);
+    let last: { action: Action };
+    try {
+      last = JSON.parse(this.state.actions[this.state.actions.length - 1]);
+    } catch {
+      return 0;
+    }
     const lastFp = this.actionFingerprint(last.action);
     let count = 1;
 
     for (let i = this.state.actions.length - 2; i >= 0; i--) {
-      const prev = JSON.parse(this.state.actions[i]);
+      let prev: { action: Action };
+      try {
+        prev = JSON.parse(this.state.actions[i]);
+      } catch {
+        break;
+      }
       if (this.actionFingerprint(prev.action) === lastFp) {
         count++;
       } else {
@@ -83,9 +93,9 @@ export class AgentRunner extends EventEmitter {
     this.state = this.resetState();
     this.state.currentUrl = url;
 
-    const interactor = await PageInteractor.create(this.pool, { headless, viewport });
-
+    let interactor: PageInteractor | undefined;
     try {
+      interactor = await PageInteractor.create(this.pool, { headless, viewport });
       this.emit('init', { url, prompt });
       await interactor.navigateTo(url);
 
@@ -112,8 +122,13 @@ export class AgentRunner extends EventEmitter {
             const prev = this.state.screenshots[this.state.screenshots.length - 2];
             const curr = context.screenshotBase64;
             if (this.screenshotsMatch(prev, curr)) {
-              const lastAction = JSON.parse(this.state.actions[this.state.actions.length - 1]);
-              const actionType = lastAction.action?.type;
+              let lastAction: { action?: { type?: string } };
+            try {
+              lastAction = JSON.parse(this.state.actions[this.state.actions.length - 1]);
+            } catch {
+              lastAction = {};
+            }
+            const actionType = lastAction.action?.type;
               if (actionType === 'click' || actionType === 'type') {
                 actionHistory.push(JSON.stringify({
                   step: 'SYSTEM',
@@ -176,7 +191,7 @@ export class AgentRunner extends EventEmitter {
 
       return this.state;
     } finally {
-      await interactor.release();
+      await interactor?.release();
       await this.pool.dispose();
       this.emit('complete', { success: this.state.success });
     }

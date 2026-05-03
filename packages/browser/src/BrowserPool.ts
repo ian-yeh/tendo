@@ -30,7 +30,7 @@ export class BrowserPool {
 
     const contextId = `ctx_${++this.usageCount}`;
     const context = await pooledBrowser.browser.newContext({
-      viewport: viewport ?? { width: 1920, height: 1080 },
+      viewport: viewport ?? { width: 1280, height: 720 },
       userAgent,
       proxy: proxy ? {
         server: proxy.server,
@@ -39,6 +39,9 @@ export class BrowserPool {
       } : undefined,
     });
 
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
     pooledBrowser.contexts.set(contextId, context);
     const pageId = `page_${++this.usageCount}`;
     const page = await context.newPage();
@@ -63,6 +66,7 @@ export class BrowserPool {
     const browserId = `browser_${++this.usageCount}`;
     const browser = await chromium.launch({
       headless: options.headless ?? true,
+      args: ['--disable-blink-features=AutomationControlled'],
       ...this.config.launchOptions,
     });
 

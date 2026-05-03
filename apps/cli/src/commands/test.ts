@@ -54,12 +54,19 @@ export const testCommand = new Command()
       p.log.error(`Error: ${error.message}`);
     });
 
-    const finalState = await runner.run({
-      url: targetUrl,
-      prompt: options.prompt,
-      headless: options.headless,
-      viewport
-    });
+    let finalState;
+    try {
+      finalState = await runner.run({
+        url: targetUrl,
+        prompt: options.prompt,
+        headless: options.headless,
+        viewport
+      });
+    } catch (error) {
+      p.log.error(color.red(`Fatal error: ${(error as Error).message}`));
+      p.outro('Test aborted.');
+      process.exit(1);
+    }
 
     p.log.message('');
     p.log.info(color.bold('Test Result:'));
@@ -72,7 +79,9 @@ export const testCommand = new Command()
         url: targetUrl,
         prompt: options.prompt,
         steps: finalState.step,
-        actions: finalState.actions.map(a => JSON.parse(a)),
+        actions: finalState.actions.flatMap(a => {
+          try { return [JSON.parse(a)]; } catch { return []; }
+        }),
         finalUrl: finalState.currentUrl,
         timestamp: new Date().toISOString(),
       };

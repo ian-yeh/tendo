@@ -15,13 +15,30 @@ export class PageInteractor {
   ): Promise<PageInteractor> {
     const { page, release } = await pool.acquirePage({
       headless: options.headless ?? true,
-      viewport: options.viewport ?? { width: 1920, height: 1080 },
+      viewport: options.viewport ?? { width: 1280, height: 720 },
     });
+    await PageInteractor.blockTrackers(page);
     return new PageInteractor(page, release);
   }
 
+  private static async blockTrackers(page: Page): Promise<void> {
+    const blocked = [
+      'google-analytics.com', 'googletagmanager.com', 'doubleclick.net',
+      'googlesyndication.com', 'facebook.com/tr', 'connect.facebook.net',
+      'hotjar.com', 'segment.io', 'mixpanel.com',
+    ];
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      if (blocked.some((domain) => url.includes(domain))) {
+        route.abort();
+      } else {
+        route.continue();
+      }
+    });
+  }
+
   async navigateTo(url: string): Promise<void> {
-    await this.page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await this.page.waitForTimeout(1000);
   }
 
@@ -113,7 +130,7 @@ export class PageInteractor {
       }
       case 'navigate': {
         if (!action.url) throw new Error('Navigate requires URL');
-        await this.page.goto(action.url, { waitUntil: 'networkidle' });
+        await this.page.goto(action.url, { waitUntil: 'domcontentloaded' });
         break;
       }
       default: break;

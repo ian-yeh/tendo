@@ -4,6 +4,7 @@ import fs from 'fs';
 import { createProvider } from '../../agent/config.js';
 import { readConfig } from '../config/config.js';
 import { runAgentWithUI } from '../shared.js';
+import { validatePrompt } from '../../promptValidator.js';
 
 export interface TestOptions {
   prompt: string;
@@ -14,6 +15,18 @@ export interface TestOptions {
 
 export async function runTest(url: string, options: TestOptions): Promise<void> {
   p.intro(color.bgCyan(color.black(' Tendo QA Agent ')));
+
+  const validation = validatePrompt(options.prompt);
+  if (!validation.valid) {
+    p.log.error(color.red(`Invalid prompt: ${validation.issue}`));
+    p.log.message('');
+    p.log.warn(color.yellow('Examples of good prompts:'));
+    p.log.message('  • "search for nodejs and click the first result"');
+    p.log.message('  • "fill the login form with email and password, then submit"');
+    p.log.message('  • "navigate to the pricing page and verify the enterprise plan costs $99/month"');
+    p.outro(color.red('Test aborted'));
+    process.exit(1);
+  }
 
   const cfg = readConfig();
   if (cfg) {

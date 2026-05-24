@@ -9,6 +9,7 @@ import { createProvider } from '../../agent/config.js';
 import { generateReport } from '../../ReportGenerator.js';
 import { readConfig } from '../config/config.js';
 import { runAgentWithUI } from '../shared.js';
+import { validatePrompt } from '../../promptValidator.js';
 
 const SESSION_ROOT = path.join(os.homedir(), '.tendo', 'watch');
 
@@ -95,6 +96,18 @@ export async function runReport(id: string | undefined, options: ReportOptions):
     // ── Live run mode ────────────────────────────────────────────────
     if (!id) {
       p.log.error('A URL is required when using -p');
+      p.outro(color.red('Report generation failed'));
+      process.exit(1);
+    }
+
+    const validation = validatePrompt(options.prompt);
+    if (!validation.valid) {
+      p.log.error(color.red(`Invalid prompt: ${validation.issue}`));
+      p.log.message('');
+      p.log.warn(color.yellow('Examples of good prompts:'));
+      p.log.message('  • "search for nodejs and click the first result"');
+      p.log.message('  • "fill the login form with email and password, then submit"');
+      p.log.message('  • "navigate to the pricing page and verify the enterprise plan costs $99/month"');
       p.outro(color.red('Report generation failed'));
       process.exit(1);
     }

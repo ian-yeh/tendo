@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npm run build --workspace=@tendo/web",
+  "installCommand": "npm install",
+  "outputDirectory": "apps/web/dist"
+}

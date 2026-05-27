@@ -74,6 +74,56 @@ export class PageInteractor {
 
       const skipTags = new Set(['yt-interaction', 'yt-icon', 'yt-icon-button', 'yt-icon-shape', 'tp-yt-paper-ripple']);
 
+      function getElementLabel(el: Element): string {
+        const tag = el.tagName.toLowerCase();
+
+        // Check for associated label
+        if ((tag === 'input' || tag === 'textarea' || tag === 'select') && el.id) {
+          const label = document.querySelector(`label[for="${el.id}"]`);
+          if (label && label.textContent) {
+            return label.textContent.trim().substring(0, 50);
+          }
+        }
+
+        // Fallback to aria-label, text content, placeholder, name, or id
+        return (
+          el.getAttribute('aria-label') ||
+          el.textContent?.trim().substring(0, 50) ||
+          el.getAttribute('placeholder') ||
+          el.getAttribute('name') ||
+          el.id ||
+          ''
+        );
+      }
+
+      function getElementDescription(el: Element): string {
+        const tag = el.tagName.toLowerCase();
+
+        if (tag === 'input') {
+          const type = el.getAttribute('type') || 'text';
+          return `input type=${type}`;
+        } else if (tag === 'button' || el.getAttribute('role') === 'button') {
+          const text = (el.textContent?.trim() || '').toLowerCase();
+          if (text.includes('submit') || text.includes('send') || text.includes('confirm')) {
+            return 'button (submit)';
+          } else if (text.includes('cancel') || text.includes('close')) {
+            return 'button (cancel)';
+          } else if (text.includes('next') || text.includes('continue')) {
+            return 'button (next)';
+          } else if (text.includes('back') || text.includes('previous')) {
+            return 'button (back)';
+          }
+          return 'button';
+        } else if (tag === 'textarea') {
+          return 'textarea';
+        } else if (tag === 'select') {
+          return 'select';
+        } else if (tag === 'a') {
+          return 'link';
+        }
+        return tag;
+      }
+
       function collect(root: ParentNode): void {
         root.querySelectorAll(selectorStr).forEach((el) => {
           if (seen.has(el)) return;
@@ -81,17 +131,13 @@ export class PageInteractor {
           if (skipTags.has(el.tagName.toLowerCase())) return;
           const rect = el.getBoundingClientRect();
           if (rect.width > 0 && rect.height > 0 && rect.x >= 0 && rect.top >= 0 && rect.top < window.innerHeight) {
-            const text = (
-              el.getAttribute('aria-label') ||
-              el.textContent?.trim().substring(0, 50) ||
-              el.getAttribute('placeholder') ||
-              ''
-            );
             const tag = el.tagName.toLowerCase();
             const id = el.id ? `#${el.id}` : '';
             const cx = Math.round(rect.x + rect.width / 2);
             const cy = Math.round(rect.y + rect.height / 2);
-            elements.push(`[${elements.length}] ${tag}${id} "${text}" @ center=(${cx}, ${cy})`);
+            const label = getElementLabel(el);
+            const description = getElementDescription(el);
+            elements.push(`[${elements.length}] ${description}${id} "${label}" @ center=(${cx}, ${cy})`);
           }
         });
         // Pierce shadow roots one level at a time

@@ -1,12 +1,56 @@
 import type { PageContext } from '@tendo/core';
+import { ProgressTracker } from './ProgressTracker.js';
 
 export class PromptEngine {
+  private progressTracker = new ProgressTracker();
+
+  buildPlanningPrompt(
+    instruction: string,
+    context: PageContext,
+    pageSummary?: string,
+  ): string {
+    const summaryBlock = pageSummary
+      ? `**PAGE ANALYSIS:** ${pageSummary}\n\n`
+      : '';
+
+    return `You are an autonomous QA agent. Analyze the current page and break down the user's task into clear, sequential steps.
+
+**TASK:** "${instruction}"
+
+**CURRENT STATE:**
+- URL: ${context.currentUrl}
+- Title: ${context.pageTitle}
+
+${summaryBlock}**DETECTED ELEMENTS:**
+${context.visibleElements.join('\n') || 'None detected'}
+
+**YOUR JOB:** Plan the sequence of actions needed to complete this task. Think about:
+1. What is the current page showing?
+2. What does the user want to do?
+3. What are the logical steps to accomplish this?
+4. What elements will you need to interact with for each step?
+
+**OUTPUT:** A numbered list of steps (3-7 steps max). Each step should be specific and actionable.
+
+Example format:
+1. Find and click the login link at the top
+2. Fill in username field with provided credentials
+3. Fill in password field
+4. Click the submit button
+5. Wait for page to load and verify success message
+
+**OUTPUT:** Raw JSON only.
+{"steps": ["Step 1: ...", "Step 2: ...", ...]}`;
+  }
+
   buildPrompt(
     instruction: string,
     context: PageContext,
     actionHistory: string[],
     remainingSteps: number,
     warnings: string[] = [],
+    plan: string[] = [],
+    pageSummary?: string,
   ): string {
     const warningsBlock = warnings.length > 0
       ? `**⚠️ CRITICAL WARNINGS — ACT ON THESE BEFORE ANYTHING ELSE:**
@@ -19,6 +63,27 @@ ${warnings.map(w => `  ${w}`).join('\n')}
       ? 'No actions taken yet.'
       : actionHistory.map((a, i) => `${i + 1}. ${a}`).join('\n');
 
+    const planBlock = plan.length > 0
+      ? `**TASK PLAN (follow this sequence):**
+${plan.map((step, i) => `${i + 1}. ${step}`).join('\n')}
+
+`
+      : '';
+
+    const progressBlock = plan.length > 0 && actionHistory.length > 0
+      ? (() => {
+          const progress = this.progressTracker.trackProgress(plan, actionHistory);
+          return `**PROGRESS:**
+${progress.summary}
+
+`;
+        })()
+      : '';
+
+    const summaryBlock = pageSummary
+      ? `**PAGE ANALYSIS:** ${pageSummary}\n\n`
+      : '';
+
     return `You are an autonomous QA agent controlling a browser.
 
 **TASK:** "${instruction}"
@@ -28,10 +93,10 @@ ${warnings.map(w => `  ${w}`).join('\n')}
 - Title: ${context.pageTitle}
 - Remaining Steps: ${remainingSteps}
 
-**DETECTED ELEMENTS (exact pixel coordinates):**
+${summaryBlock}**DETECTED ELEMENTS (exact pixel coordinates):**
 ${context.visibleElements.join('\n') || 'None detected'}
 
-${warningsBlock}**ACTION HISTORY:**
+${planBlock}${progressBlock}${warningsBlock}**ACTION HISTORY:**
 ${historyBlock}
 
 **ACTIONS:** click {x,y}, type {x,y,text}, key {key}, scroll {direction,amount}, wait, navigate {url}, evaluate {script}, done {reason}, fail {reason}

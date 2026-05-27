@@ -46,6 +46,7 @@ export class AgentRunner extends EventEmitter {
       step: 0,
       actions: [],
       screenshots: [],
+      plan: [],
       completed: false,
       success: false,
     };
@@ -119,6 +120,17 @@ export class AgentRunner extends EventEmitter {
       this.emit('init', { url, prompt });
       await interactor.navigateTo(url);
 
+      // Plan the task steps
+      try {
+        const context = await interactor.captureContext();
+        this.state.screenshots.push(context.screenshotBase64);
+        const plan = await this.vision.planNextSteps(prompt, context);
+        this.state.plan = plan;
+        this.emit('plan', { plan });
+      } catch (error) {
+        this.emit('warning', { message: 'Failed to plan steps, proceeding without plan', error });
+      }
+
       while (this.state.step < maxSteps && !this.state.completed) {
         this.state.step++;
         this.emit('step:start', { step: this.state.step });
@@ -148,6 +160,7 @@ export class AgentRunner extends EventEmitter {
             maxSteps - this.state.step,
             warnings,
             previousScreenshot,
+            this.state.plan,
           );
 
           this.emit('step:decision', {

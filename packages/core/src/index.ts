@@ -47,6 +47,7 @@ export interface AgentState {
   step: number;
   actions: string[];
   screenshots: string[];
+  plan: string[];
   completed: boolean;
   success: boolean;
 }

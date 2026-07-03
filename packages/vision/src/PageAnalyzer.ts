@@ -11,7 +11,6 @@ export class PageAnalyzer {
     const elements = context.visibleElements;
     const elementLower = elements.map(e => e.toLowerCase());
 
-    // Detect login form
     if (this.detectLoginForm(elementLower)) {
       return {
         type: 'login-form',
@@ -20,7 +19,6 @@ export class PageAnalyzer {
       };
     }
 
-    // Detect search form
     if (this.detectSearchForm(elementLower)) {
       return {
         type: 'search-form',
@@ -29,7 +27,6 @@ export class PageAnalyzer {
       };
     }
 
-    // Detect product page
     if (this.detectProductPage(elementLower)) {
       return {
         type: 'product-page',
@@ -38,7 +35,6 @@ export class PageAnalyzer {
       };
     }
 
-    // Default: generic page with interactive elements
     return {
       type: 'generic',
       elements: elements.slice(0, 10),

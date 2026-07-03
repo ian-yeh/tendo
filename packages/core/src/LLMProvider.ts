@@ -1,6 +1,4 @@
-import type { VisionDecision } from './index.js';
-
-// ── LLM Provider Interface ──────────────────────────────────────────
+import type { VisionDecision } from './types.js';
 
 export interface LLMProviderConfig {
   apiKey: string;

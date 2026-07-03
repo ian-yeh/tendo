@@ -1,10 +1,10 @@
 import * as p from '@clack/prompts';
 import color from 'picocolors';
 import fs from 'fs';
-import { createProvider } from '../../agent/config.js';
-import { readConfig } from '../config/config.js';
-import { runAgentWithUI } from '../shared.js';
-import { validatePrompt } from '../../promptValidator.js';
+import { createProvider } from '../agent/config.js';
+import { readConfig } from './config.js';
+import { runAgentWithUI } from './shared.js';
+import { validatePrompt } from '../promptValidator.js';
 
 export interface TestOptions {
   prompt: string;

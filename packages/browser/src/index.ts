@@ -1,3 +1,11 @@
-export * from './BrowserPool.js';
-export * from './PageInteractor.js';
-export * from './types.js';
+export { BrowserPool } from './BrowserPool.js';
+export { PageInteractor } from './PageInteractor.js';
+export type {
+  BrowserPoolConfig,
+  ProxyConfig,
+  ViewportConfig,
+  AcquirePageOptions,
+  PageInteractorOptions,
+  PooledBrowser,
+  PageRelease,
+} from './types.js';

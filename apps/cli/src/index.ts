@@ -4,9 +4,7 @@ import 'dotenv/config';
 
 import { Command } from 'commander';
 
-import { testCommand } from './commands/test/index.js';
-import { reportCommand } from './commands/report/index.js';
-import { configCommand } from './commands/config/index.js';
+import { testCommand, reportCommand, configCommand } from './commands/index.js';
 
 const program = new Command();
 

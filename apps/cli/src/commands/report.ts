@@ -5,11 +5,11 @@ import path from 'node:path';
 import os from 'node:os';
 import { exec } from 'node:child_process';
 import type { TestResult } from '@tendo/core';
-import { createProvider } from '../../agent/config.js';
-import { generateReport } from '../../ReportGenerator.js';
-import { readConfig } from '../config/config.js';
-import { runAgentWithUI } from '../shared.js';
-import { validatePrompt } from '../../promptValidator.js';
+import { createProvider } from '../agent/config.js';
+import { generateReport } from '../ReportGenerator.js';
+import { readConfig } from './config.js';
+import { runAgentWithUI } from './shared.js';
+import { validatePrompt } from '../promptValidator.js';
 
 const SESSION_ROOT = path.join(os.homedir(), '.tendo', 'watch');
 

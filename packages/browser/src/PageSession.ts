@@ -97,14 +97,26 @@ export class PageSession {
       ].join(',');
       const skipTags = new Set(['yt-interaction', 'yt-icon', 'yt-icon-button', 'yt-icon-shape', 'tp-yt-paper-ripple']);
 
-      function roleOf(el: Element): string {
+      // A generic (non-native, no-role) element counts as interactive only if it
+      // actually behaves like a control — otherwise the loose class/data-* selectors
+      // pull in decorative wrappers and info panels.
+      function isClickable(el: Element): boolean {
+        if (el.hasAttribute('onclick')) return true;
+        if ((el as HTMLElement).tabIndex >= 0) return true;
+        try { if (getComputedStyle(el).cursor === 'pointer') return true; } catch { /* detached */ }
+        return false;
+      }
+
+      // Returns an interactive role, or null for non-interactive elements (which are dropped).
+      function roleOf(el: Element): string | null {
         const explicit = el.getAttribute('role');
         if (explicit) return explicit;
         const tag = el.tagName.toLowerCase();
-        if (tag === 'a') return 'link';
+        if (tag === 'a') return el.hasAttribute('href') || isClickable(el) ? 'link' : null;
         if (tag === 'button') return 'button';
         if (tag === 'input') {
           const t = (el.getAttribute('type') || 'text').toLowerCase();
+          if (t === 'hidden') return null;
           if (t === 'checkbox') return 'checkbox';
           if (t === 'radio') return 'radio';
           if (t === 'submit' || t === 'button') return 'button';
@@ -112,23 +124,77 @@ export class PageSession {
         }
         if (tag === 'textarea') return 'textbox';
         if (tag === 'select') return 'combobox';
-        return tag;
+        // div/span/etc. matched by a class or data-* heuristic: keep only if it acts clickable.
+        return isClickable(el) ? 'button' : null;
       }
 
+      const clean = (s: string | null | undefined): string =>
+        (s || '').replace(/\s+/g, ' ').trim().substring(0, 80);
+
+      // Text belonging only to `el` — excludes text inside nested controls, so a
+      // menu/toolbar wrapper doesn't slurp every child's label into one blob.
+      function ownText(el: Element): string {
+        const NESTED = 'button,a,select,input,textarea,[role="button"],[role="link"],[role="menuitem"],[role="option"],[role="tab"]';
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let s = '';
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          let p = node.parentElement;
+          let skip = false;
+          while (p && p !== el) {
+            if (p.matches(NESTED)) { skip = true; break; }
+            p = p.parentElement;
+          }
+          if (!skip) s += ' ' + (node.nodeValue || '');
+        }
+        return s;
+      }
+
+      function labelFor(el: Element): string {
+        if (el.id) {
+          const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+          if (l) return ownText(l);
+        }
+        const wrap = el.closest('label');
+        return wrap ? ownText(wrap) : '';
+      }
+
+      // ARIA accessible-name precedence (simplified): labelledby → aria-label →
+      // control-specific label → own visible text → title.
       function nameOf(el: Element): string {
         const tag = el.tagName.toLowerCase();
-        if ((tag === 'input' || tag === 'textarea' || tag === 'select') && el.id) {
-          const label = document.querySelector(`label[for="${el.id}"]`);
-          if (label?.textContent) return label.textContent.trim().substring(0, 60);
+
+        const labelledby = el.getAttribute('aria-labelledby');
+        if (labelledby) {
+          const joined = labelledby.split(/\s+/)
+            .map((id) => { const t = document.getElementById(id); return t ? ownText(t) : ''; })
+            .join(' ');
+          if (clean(joined)) return clean(joined);
         }
-        return (
-          el.getAttribute('aria-label') ||
-          el.textContent?.trim().substring(0, 60) ||
-          el.getAttribute('placeholder') ||
-          el.getAttribute('name') ||
-          el.id ||
-          ''
-        );
+
+        const aria = el.getAttribute('aria-label');
+        if (clean(aria)) return clean(aria);
+
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+          const lf = labelFor(el);
+          if (lf) return clean(lf);
+          const ph = el.getAttribute('placeholder');
+          if (ph) return clean(ph);
+          if (tag === 'select') {
+            const sel = (el as HTMLSelectElement).selectedOptions?.[0];
+            if (sel?.textContent) return clean(sel.textContent); // selected option, not every option
+          } else {
+            const val = (el as HTMLInputElement).value;
+            if (val && (el as HTMLInputElement).type !== 'password') return clean(val);
+          }
+          return clean(el.getAttribute('title') || el.getAttribute('name'));
+        }
+
+        if (tag === 'img') return clean(el.getAttribute('alt'));
+
+        const own = clean(ownText(el)); // excludes nested-control text
+        if (own) return own;
+        return clean(el.getAttribute('title'));
       }
 
       function nthPath(el: Element): string {
@@ -165,6 +231,7 @@ export class PageSession {
           const rect = el.getBoundingClientRect();
           if (rect.width > 0 && rect.height > 0 && rect.x >= 0 && rect.top >= 0 && rect.top < window.innerHeight) {
             const role = roleOf(el);
+            if (!role) return; // non-interactive element, drop it
             const name = nameOf(el);
             const fp = hash(`${role}|${name}|${el.tagName.toLowerCase()}|${nthPath(el)}`);
             out.push({
@@ -257,13 +324,23 @@ export class PageSession {
     const meta = await sharp(base).metadata();
     const w = meta.width ?? 1280;
     const h = meta.height ?? 720;
-    const boxes = elements.map((e) => {
+    // Draw every box outline first, then every id badge on top, so badges are
+    // never hidden under a later box.
+    const rects = elements.map((e) => {
       const [x, y, bw, bh] = e.bbox;
-      return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="none" stroke="#e11d48" stroke-width="2"/>` +
-        `<rect x="${x}" y="${Math.max(0, y - 16)}" width="${String(e.id).length * 9 + 8}" height="16" fill="#e11d48"/>` +
-        `<text x="${x + 4}" y="${Math.max(11, y - 4)}" font-family="monospace" font-size="12" fill="#fff">${e.id}</text>`;
+      return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="none" stroke="#e11d48" stroke-width="2"/>`;
     }).join('');
-    const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${boxes}</svg>`;
+    const badges = elements.map((e) => {
+      const [x, y] = e.bbox;
+      const label = String(e.id);
+      const bw = label.length * 8 + 8;
+      const bh = 15;
+      // Sit above the box; if that clips the top edge, tuck it just inside.
+      const by = y - bh >= 0 ? y - bh : y;
+      return `<rect x="${x}" y="${by}" width="${bw}" height="${bh}" rx="2" fill="#e11d48"/>` +
+        `<text x="${x + 4}" y="${by + 11}" font-family="monospace" font-size="11" font-weight="bold" fill="#fff">${label}</text>`;
+    }).join('');
+    const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">${rects}${badges}</svg>`;
     await sharp(base).composite([{ input: Buffer.from(svg), top: 0, left: 0 }]).png().toFile(outFile);
   }
 

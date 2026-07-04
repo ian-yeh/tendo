@@ -1,71 +1,101 @@
-<h1 align="center">Tendo</h1>
+<h1 align="center">tendo</h1>
 
 <p align="center">
-  Autonomous QA agent that tests your web app the way a person would.
+  <a href="https://www.npmjs.com/package/tendo"><img alt="npm" src="https://img.shields.io/npm/v/tendo?style=flat-square" /></a>
+  <a href="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square"><img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square" /></a>
+  <a href="https://img.shields.io/badge/node-20%2B-blue?style=flat-square"><img alt="Node" src="https://img.shields.io/badge/node-20%2B-blue?style=flat-square" /></a>
 </p>
 
-<p align="center">
-  No test scripts. No selectors. No maintenance.
-</p>
+Vision-native browser eyes and hands for agents.
 
----
-
-## What it does
-
-You give Tendo a URL and a prompt like "add an item to the cart and check out". It takes it from there — navigating, clicking, typing, scrolling — and at each step, it looks at what's actually on the screen to decide what to do next. When it's done, it tells you whether the flow succeeded or where it broke. It's less like a test runner and more like a QA engineer who never gets tired.
+Tendo captures web page state — annotated screenshots, a grounded element map, console and network errors — and executes deterministic actions by element id. The calling agent does the vision and reasoning; Tendo is the eyes and hands. It ships **no LLM**: no API key, no config, no per-token cost of its own. Built for autonomous agents that drive a browser via shell execution.
 
 ## Why
 
-Most E2E testing tools require you to write and maintain brittle scripts that break every time your UI changes. Tendo describes intent, not implementation. If your button moves, Tendo adapts. If your flow changes, you update one sentence.
+A DOM/selector tool is cheaper on clean semantic HTML — use one there. Tendo wins where the DOM lies or isn't the truth:
 
-## Commands
+- **Canvas / WebGL / video** — charts, maps, games, design tools. No DOM nodes to select; only pixels.
+- **Visual assertions** — "does the total actually render, not overlap, have enough contrast, and not shift on load."
+- **State setup** — `--after "type email, click sign in, add to cart"` gets you to a primed page in one call.
 
-```bash
-tendo test <url> -p "<prompt>"           # Headless test — pass/fail result
-tendo report <url> -p "<prompt>"         # Run a test and generate an HTML report
-tendo report <url> -p "<prompt>" --watch # Visible browser + screenshots + HTML report
-tendo config                             # View and edit provider settings
+It grounds actions on role + name + visual position, so the caller clicks the exact right pixels without guessing coordinates or parsing DOM.
+
+## Quick Start
+
+No install needed — any capable agent can run the CLI directly:
+
+```
+Execute `npx -y tendo look <url>` to get browser eyes and hands.
 ```
 
-### `tendo test`
+Tendo drives Chromium via Playwright (Node 20+). On first run, install the browser once:
 
-The core command. Provide a starting URL and a plain English description of the flow you want to verify. Tendo spins up a headless browser, executes the steps autonomously using visual perception, and reports whether the flow succeeded or failed.
-
-```bash
-tendo test https://example-store.com -p "Add the first featured item to the cart and proceed to checkout"
+```sh
+npx playwright install chromium
 ```
 
-### `tendo report`
-
-Runs a test and generates a self-contained HTML report with screenshots, step-by-step reasoning, and a pass/fail summary. Add `--watch` to run with a visible browser and save per-step screenshots to disk for debugging.
+## Usage
 
 ```bash
-# Run headless and open the HTML report
-tendo report https://todomvc.com -p "Add three todos and mark the first one complete"
+tendo look https://example.com                      # capture: element map + screenshot + errors
+tendo look https://example.com --annotate           # numbered set-of-marks overlay on the screenshot
+tendo look https://example.com --text-only          # cheapest tier: no screenshot
+tendo look https://example.com --session s1          # keep the browser alive for follow-up act
+tendo look https://shop.com --after "click sign in"  # grounded setup actions before capture
 
-# Visible browser + per-step screenshots + HTML report
-tendo report https://todomvc.com -p "Add three todos and mark the first one complete" --watch
+tendo act --session s1 --element 3 --type "lofi"     # deterministic: type into element #3
+tendo act --session s1 "click the checkout button"   # text mode: fuzzy role+name match
+tendo act https://example.com "click Learn more"     # ephemeral: one action on a fresh load
 
-# Generate a report from a previous session
-tendo report           # latest session
-tendo report 3         # session number
-tendo report ./result.json
+tendo sessions                                       # list live sessions + TTL remaining
+tendo kill s1 | tendo kill --all                     # close sessions
 ```
 
-When using `--watch`, per-step screenshots are saved to `~/.tendo/watch/<session>/<timestamp>/`.
+Every `look` writes screenshots to disk and prints a machine-readable summary (TOON by default, `--format json` to opt out). Screenshot **bytes are never inlined** — only paths, which the agent reads on demand. Every `act` returns the fused post-action state inline, never a bare "Done".
 
-### `tendo config`
+### The loop
 
-View and edit your LLM provider configuration — API keys, model selection, and provider choice.
+1. `tendo look <url> --session s1 --annotate` — get the numbered screenshot + element map.
+2. The agent reads the annotated image with its own vision: search box = `3`, checkout = `1`.
+3. `tendo act --session s1 --element 1` — click the exact element, get the new state back.
+4. Repeat. Reasoning lives in the agent; grounding and capture live in Tendo.
+
+### Escalation ladder
+
+Default to the cheapest tier and only spend pixels when needed: `--text-only` → `--region <selector>` → full `look` → `--annotate`. Every response includes `hints:` that nudge you down a rung.
+
+### Commands
+
+| Command    | Description                                                              |
+| ---------- | ------------------------------------------------------------------------ |
+| `look`     | Capture page state → screenshots on disk + element map + diagnostics     |
+| `act`      | Execute one grounded action, return the fused post-action `look` payload  |
+| `sessions` | List live browser sessions and their idle TTL                            |
+| `kill`     | Close a session (`<id>`) or all sessions (`--all`)                        |
+
+### Outcomes
+
+`act` reports one of: `ok` · `not_found` (element gone → fresh state returned) · `ambiguous` (ranked candidates returned, pick by id) · `error`.
+
+### Global flags
+
+- `--help` — show help for any command
+- `-V`, `--version` — show the installed `tendo` version
+
+## Sessions
+
+`--session <id>` keeps a browser alive across calls (agent turns are minutes apart). A background daemon holds the live page and auto-spawns on first use; sessions idle-reap after 10 minutes. Without `--session`, `look`/`act` are ephemeral — launch, capture, kill.
 
 ## Development
 
-```bash
-npm install                          # Install all dependencies
-npm run build --workspaces           # Build all packages
-npm run dev --workspace=apps/cli     # Run CLI in dev mode (no compile step)
+```sh
+npm install                                  # install all workspace dependencies
+npm run build --workspaces                   # build core → browser → cli
+node apps/cli/dist/index.js look <url>       # run the built CLI
 ```
 
----
+See [AGENTS.md](./AGENTS.md) for architecture and contributor guidance, and [SCOPE.md](./SCOPE.md) for the design record and roadmap.
 
-<p align="center"><em>built by Ian Yeh</em></p>
+## License
+
+MIT

@@ -47,11 +47,11 @@ export function addHints(payload: LookPayload, flags: LookFlags): LookPayload {
   if (!flags.textOnly && payload.elements.length > 0) {
     hints.push('If no visual check is needed, re-run with --text-only next time (no screenshot, cheaper).');
   }
-  if (payload.elements.length > 0 && payload.session !== 'ephemeral') {
+  if (payload.elements.length > 0 && payload.session !== 'none') {
     const first = payload.elements[0];
     hints.push(`Deterministic action: tendo act --session ${payload.session} --element ${first.id}  # "${first.name}"`);
   }
-  if (payload.session === 'ephemeral') {
+  if (payload.session === 'none') {
     hints.push('Start a reusable session with --session <id> to keep the browser alive for act.');
   }
   if (payload.consoleErrors.length) hints.push('Console errors present — the page may be broken.');

@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 
-import { runLook, runAct, runSessions, runKill } from './commands.js';
+import { runLook, runAct, runSessions, runKill } from './commands/index.js';
 
 const program = new Command();
 
@@ -15,7 +15,7 @@ program
   .command('look')
   .description('Capture page state → artifacts on disk + machine-readable summary on stdout')
   .argument('<url>', 'URL to capture')
-  .option('--session <id>', 'Reattach to a live browser session (default: ephemeral)')
+  .option('--session <id>', 'Reattach to a live browser session (default: no session, browser killed after capture)')
   .option('--after <seq>', 'Comma-separated grounded setup actions before capture')
   .option('--region <selector>', 'Crop screenshot to the element bbox')
   .option('--annotate', 'Numbered set-of-marks overlay on interactive elements')
@@ -32,7 +32,7 @@ program
 program
   .command('act')
   .description('Execute one grounded action, return the post-action look payload inline')
-  .argument('[target]', 'URL (ephemeral). Omit when using --session.')
+  .argument('[target]', 'URL (one-shot). Omit when using --session.')
   .argument('[action]', 'Text action, e.g. "click the checkout button"')
   .option('--session <id>', 'Act against a live session instead of a URL')
   .option('--element <n>', 'Click/type by annotated element id from the last capture')

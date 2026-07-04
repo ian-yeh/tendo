@@ -32,7 +32,7 @@ export interface FailedRequestInfo {
 }
 
 export interface LookPayload {
-  session: string; // session id, or "ephemeral"
+  session: string; // session id, or "none" for a one-shot capture
   url: string;
   title: string;
   screenshots: ScreenshotInfo[];

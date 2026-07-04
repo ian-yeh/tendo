@@ -45,7 +45,7 @@ tendo look https://shop.com --after "click sign in"  # grounded setup actions be
 
 tendo act --session s1 --element 3 --type "lofi"     # deterministic: type into element #3
 tendo act --session s1 "click the checkout button"   # text mode: fuzzy role+name match
-tendo act https://example.com "click Learn more"     # ephemeral: one action on a fresh load
+tendo act https://example.com "click Learn more"     # one-shot: one action on a fresh load
 
 tendo sessions                                       # list live sessions + TTL remaining
 tendo kill s1 | tendo kill --all                     # close sessions
@@ -84,7 +84,7 @@ Default to the cheapest tier and only spend pixels when needed: `--text-only` �
 
 ## Sessions
 
-`--session <id>` keeps a browser alive across calls (agent turns are minutes apart). A background daemon holds the live page and auto-spawns on first use; sessions idle-reap after 10 minutes. Without `--session`, `look`/`act` are ephemeral — launch, capture, kill.
+`--session <id>` keeps a browser alive across calls (agent turns are minutes apart). A background daemon holds the live page and auto-spawns on first use; sessions idle-reap after 10 minutes. Without `--session`, `look`/`act` run one-shot — launch, capture, kill.
 
 ## Development
 

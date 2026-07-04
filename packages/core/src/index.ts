@@ -1,14 +1,12 @@
-export { Logger } from './Logger.js';
-export type { LogLevel, LogEntry } from './Logger.js';
-
-export type { LLMProviderConfig, LLMRequest, LLMResponse, LLMProvider } from './LLMProvider.js';
-
 export type {
-  AgentConfig,
-  ActionType,
-  Action,
-  AgentState,
-  PageContext,
-  VisionDecision,
-  TestResult,
-} from './types.js';
+  Bbox,
+  ElementInfo,
+  ScreenshotInfo,
+  ConsoleErrorInfo,
+  FailedRequestInfo,
+  LookPayload,
+  ActOutcome,
+  ActResult,
+  CaptureOptions,
+  Clause,
+} from './elements.js';

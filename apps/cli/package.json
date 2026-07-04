@@ -1,8 +1,8 @@
 {
-  "name": "testpilot-cli",
-  "version": "1.0.0",
+  "name": "tendo",
+  "version": "2.0.0",
   "type": "module",
-  "description": "TestPilot AI CLI",
+  "description": "Eyes and hands for coding agents — capture web page state and execute grounded actions",
   "main": "dist/index.js",
   "bin": {
     "tendo": "./dist/index.js"
@@ -21,14 +21,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@clack/prompts": "^1.2.0",
-    "@google/generative-ai": "^0.24.1",
-    "@tendo/agent": "*",
     "@tendo/browser": "*",
     "@tendo/core": "*",
     "commander": "^14.0.3",
-    "dotenv": "^16.4.5",
-    "picocolors": "^1.1.1",
     "playwright": "^1.42.0"
   }
 }

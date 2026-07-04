@@ -25,11 +25,6 @@ export interface AcquirePageOptions {
   userAgent?: string;
 }
 
-export interface PageInteractorOptions {
-  headless?: boolean;
-  viewport?: ViewportConfig;
-}
-
 export interface PooledBrowser {
   browser: Browser;
   contexts: Map<string, BrowserContext>;

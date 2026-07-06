@@ -8,7 +8,7 @@
   "description": "Eyes and hands for coding agents — capture web page state and execute grounded actions",
   "main": "dist/index.js",
   "bin": {
-    "tendo": "./dist/index.js"
+    "tendo": "dist/index.js"
   },
   "files": [
     "dist",

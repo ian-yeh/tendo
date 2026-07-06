@@ -1,11 +1,11 @@
 {
   "name": "@ianyeh/tendo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
-  "description": "Eyes and hands for coding agents — capture web page state and execute grounded actions",
+  "description": "Eyes and hands for coding agents. Let an LLM see a web page and act on it, with zero setup.",
   "main": "dist/index.js",
   "bin": {
     "tendo": "dist/index.js"
@@ -20,9 +20,29 @@
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "browser",
+    "automation",
+    "playwright",
+    "agent",
+    "llm",
+    "ai",
+    "cli",
+    "screenshot",
+    "web-scraping",
+    "browser-automation"
+  ],
+  "author": "Ian Yeh",
   "license": "MIT",
+  "homepage": "https://github.com/ian-yeh/tendo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ian-yeh/tendo.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/ian-yeh/tendo/issues"
+  },
   "devDependencies": {
     "@tendo/browser": "*",
     "@tendo/core": "*",

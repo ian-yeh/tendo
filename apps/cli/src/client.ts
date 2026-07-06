@@ -1,4 +1,5 @@
 import net from 'node:net';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { SOCKET_PATH } from './shared.js';
@@ -12,10 +13,12 @@ function tryConnect(): Promise<net.Socket> {
 }
 
 function spawnDaemon(): void {
-  // Sibling module, same extension as this one (daemon.js in dist, daemon.ts under tsx).
+  // Sibling daemon module in the same directory (daemon.js in dist, daemon.ts under tsx).
+  // Resolved by directory rather than filename so it survives bundling into index.js.
   const self = fileURLToPath(import.meta.url);
-  const daemonPath = self.replace(/client\.(js|ts)$/, 'daemon.$1');
-  const child = spawn(process.execPath, self.endsWith('.ts')
+  const ext = self.endsWith('.ts') ? 'ts' : 'js';
+  const daemonPath = path.join(path.dirname(self), `daemon.${ext}`);
+  const child = spawn(process.execPath, ext === 'ts'
     ? ['--import', 'tsx', daemonPath]
     : [daemonPath], {
     detached: true,

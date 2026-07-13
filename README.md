@@ -6,95 +6,101 @@
   <a href="https://img.shields.io/badge/node-20%2B-blue?style=flat-square"><img alt="Node" src="https://img.shields.io/badge/node-20%2B-blue?style=flat-square" /></a>
 </p>
 
-Vision-native browser eyes and hands for agents.
+Browser eyes and hands for coding agents.
 
-Tendo captures web page state — annotated screenshots, a grounded element map, console and network errors — and executes deterministic actions by element id. The calling agent does the vision and reasoning; Tendo is the eyes and hands. It ships **no LLM**: no API key, no config, no per-token cost of its own. Built for autonomous agents that drive a browser via shell execution.
+Tendo captures what a web page looks like (screenshots, a grounded element map, console and network errors) and clicks or types on it by element id. It has no LLM of its own: the agent calling it does the looking and the thinking, Tendo just sees and acts. That means no API key, no config, and no token cost from Tendo itself. `npx -y @ianyeh/tendo` works out of the box.
 
-## Why
+## When to use it
 
-A DOM/selector tool is cheaper on clean semantic HTML — use one there. Tendo wins where the DOM lies or isn't the truth:
+If the page is clean semantic HTML, a plain DOM or selector tool is cheaper and you should use that. Tendo earns its keep when the DOM isn't the whole story:
 
-- **Canvas / WebGL / video** — charts, maps, games, design tools. No DOM nodes to select; only pixels.
-- **Visual assertions** — "does the total actually render, not overlap, have enough contrast, and not shift on load."
-- **State setup** — `--after "type email, click sign in, add to cart"` gets you to a primed page in one call.
+- **Canvas, WebGL, video** - charts, maps, games, design tools. There's nothing to select, only pixels.
+- **Visual checks** - does the total actually render, line up, have enough contrast, and stay put on load.
+- **Getting to a starting state** - `--after "type email, click sign in, add to cart"` primes a page in one call.
 
-It grounds actions on role + name + visual position, so the caller clicks the exact right pixels without guessing coordinates or parsing DOM.
+Tendo grounds every action on an element's role, name, and position, so the agent hits the right pixels without guessing coordinates or scraping the DOM.
 
-## Quick Start
+## Quick start
 
-No install needed — any capable agent can run the CLI directly:
-
-```
-Execute `npx -y tendo look <url>` to get browser eyes and hands.
-```
-
-Tendo drives Chromium via Playwright (Node 20+). On first run, install the browser once:
+Install the tendo skill so your agent knows when and how to reach for it:
 
 ```sh
-npx playwright install chromium
+npx skills add ian-yeh/tendo --skill tendo -g
 ```
+
+That is the whole setup. The skill teaches the agent to run tendo through `npx -y @ianyeh/tendo`, so the CLI comes along on demand. Drop the `-g` to install for the current project only.
+
+`-g` installs globally (`~/.claude/skills/`); without it the skill lands in `.claude/skills/` for this project.
+
+Prefer no skill? Any capable agent can run the CLI directly:
+
+```
+Run `npx -y @ianyeh/tendo look <url>` for browser eyes and hands.
+```
+
+Tendo drives Chromium through Playwright (Node 20+). First use fetches it automatically; if that fails, install it once with `npx playwright install chromium`.
 
 ## Usage
 
 ```bash
-tendo look https://example.com                      # capture: element map + screenshot + errors
-tendo look https://example.com --annotate           # numbered set-of-marks overlay on the screenshot
-tendo look https://example.com --text-only          # cheapest tier: no screenshot
-tendo look https://example.com --session s1          # keep the browser alive for follow-up act
-tendo look https://shop.com --after "click sign in"  # grounded setup actions before capture
+tendo look https://example.com                       # element map + screenshot + errors
+tendo look https://example.com --annotate            # numbered overlay on the screenshot
+tendo look https://example.com --text-only           # cheapest: no screenshot
+tendo look https://example.com --session s1          # keep the browser alive for a follow-up act
+tendo look https://shop.com --after "click sign in"  # run setup actions before capturing
 
-tendo act --session s1 --element 3 --type "lofi"     # deterministic: type into element #3
-tendo act --session s1 "click the checkout button"   # text mode: fuzzy role+name match
-tendo act https://example.com "click Learn more"     # one-shot: one action on a fresh load
+tendo act --session s1 --element 3 --type "lofi"     # type into element #3
+tendo act --session s1 "click the checkout button"   # fuzzy match by role + name
+tendo act https://example.com "click Learn more"     # one-shot on a fresh load
 
-tendo sessions                                       # list live sessions + TTL remaining
+tendo sessions                                       # list live sessions + TTL
 tendo kill s1 | tendo kill --all                     # close sessions
 ```
 
-Every `look` writes screenshots to disk and prints a machine-readable summary (TOON by default, `--format json` to opt out). Screenshot **bytes are never inlined** — only paths, which the agent reads on demand. Every `act` returns the fused post-action state inline, never a bare "Done".
+Every `look` writes screenshots to disk and prints a machine-readable summary (TOON by default, or `--format json`). The image bytes are never dumped into the output, only the paths, so the agent reads a screenshot when it actually needs the pixels. Every `act` returns the new page state inline, never a bare "Done".
 
 ### The loop
 
-1. `tendo look <url> --session s1 --annotate` — get the numbered screenshot + element map.
-2. The agent reads the annotated image with its own vision: search box = `3`, checkout = `1`.
-3. `tendo act --session s1 --element 1` — click the exact element, get the new state back.
-4. Repeat. Reasoning lives in the agent; grounding and capture live in Tendo.
+1. `tendo look <url> --session s1 --annotate` gives you a numbered screenshot and an element map.
+2. The agent looks at the image: search box is `3`, checkout is `1`.
+3. `tendo act --session s1 --element 1` clicks it and returns the new state.
+4. Repeat. The agent reasons; Tendo captures and grounds.
 
-### Escalation ladder
+### Spend pixels only when you need them
 
-Default to the cheapest tier and only spend pixels when needed: `--text-only` → `--region <selector>` → full `look` → `--annotate`. Every response includes `hints:` that nudge you down a rung.
+Start cheap and climb: `--text-only` → `--region <selector>` → full `look` → `--annotate`. Every response carries `hints:` that point you to the next rung.
 
 ### Commands
 
-| Command    | Description                                                              |
-| ---------- | ------------------------------------------------------------------------ |
-| `look`     | Capture page state → screenshots on disk + element map + diagnostics     |
-| `act`      | Execute one grounded action, return the fused post-action `look` payload  |
-| `sessions` | List live browser sessions and their idle TTL                            |
-| `kill`     | Close a session (`<id>`) or all sessions (`--all`)                        |
+| Command    | What it does                                                        |
+| ---------- | ------------------------------------------------------------------- |
+| `look`     | Capture page state: screenshots on disk, element map, diagnostics   |
+| `act`      | Run one grounded action and return the new page state               |
+| `sessions` | List live browser sessions and their idle TTL                       |
+| `kill`     | Close a session (`<id>`) or all of them (`--all`)                   |
 
-### Outcomes
+### Act outcomes
 
-`act` reports one of: `ok` · `not_found` (element gone → fresh state returned) · `ambiguous` (ranked candidates returned, pick by id) · `error`.
+`ok`, `not_found` (element gone, fresh state returned), `ambiguous` (ranked candidates returned, pick one by id), or `error`.
 
 ### Global flags
 
-- `--help` — show help for any command
-- `-V`, `--version` — show the installed `tendo` version
+- `--help` shows help for any command
+- `-V`, `--version` prints the installed version
 
 ## Sessions
 
-`--session <id>` keeps a browser alive across calls (agent turns are minutes apart). A background daemon holds the live page and auto-spawns on first use; sessions idle-reap after 10 minutes. Without `--session`, `look`/`act` run one-shot — launch, capture, kill.
+Agent turns can be minutes apart, so `--session <id>` keeps a browser alive between calls. A background daemon holds the live page, spawns itself on first use, and reaps sessions after 10 minutes idle. Without `--session`, `look` and `act` run one-shot: launch, capture, kill.
 
 ## Development
 
 ```sh
-npm install                                  # install all workspace dependencies
+npm install                                  # install workspace dependencies
 npm run build --workspaces                   # build core → browser → cli
 node apps/cli/dist/index.js look <url>       # run the built CLI
 ```
 
-See [AGENTS.md](./AGENTS.md) for architecture and contributor guidance, and [SCOPE.md](./SCOPE.md) for the design record and roadmap.
+See [AGENTS.md](./AGENTS.md) for architecture and [SCOPE.md](./SCOPE.md) for the design record and roadmap.
 
 ## License
 

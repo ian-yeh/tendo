@@ -1,6 +1,6 @@
 # Tendo Landing Page
 
-A minimalist, production-grade landing page for Tendo - Autonomous Web Testing.
+A minimalist, production-grade landing page for Tendo - Browser eyes and hands for coding agents.
 
 ## Setup
 
@@ -34,8 +34,7 @@ npm run build --workspace=@tendo/web
 - **Philosophy**: "Action compounds, panic does not" - a testament to builders who care.
 
 The page showcases:
-- What Tendo is (autonomous web testing agent)
-- Key features (visual perception, plain English, multi-step flows, reliability)
-- Why it matters (for builders who refuse flaky tests)
-- Links to GitHub
-
+- What Tendo is (browser eyes and hands for external AI agents)
+- Key features (grounded element mapping, daemon sessions, token-minimal output)
+- Why it matters (performance and token economics benchmarks)
+- Links to GitHub and documentation

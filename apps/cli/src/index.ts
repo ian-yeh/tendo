@@ -8,7 +8,7 @@ const program = new Command();
 
 program
   .name('tendo')
-  .description('Tendo — eyes and hands for coding agents. Capture web page state and execute grounded actions. Zero setup.')
+  .description('Tendo - eyes and hands for coding agents. Capture web page state and execute grounded actions. Zero setup.')
   .version('2.0.0');
 
 program

@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/tendo"><img alt="npm" src="https://img.shields.io/npm/v/tendo?style=flat-square" /></a>
   <a href="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square"><img alt="Platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue?style=flat-square" /></a>
-  <a href="https://img.shields.io/badge/node-20%2B-blue?style=flat-square"><img alt="Node" src="https://img.shields.io/badge/node-20%2B-blue?style=flat-square" /></a>
+  <a href="https://img.shields.io/badge/node-22%2B-blue?style=flat-square"><img alt="Node" src="https://img.shields.io/badge/node-22%2B-blue?style=flat-square" /></a>
 </p>
 
 Browser eyes and hands for coding agents.
@@ -38,7 +38,7 @@ Prefer no skill? Any capable agent can run the CLI directly:
 Run `npx -y @ianyeh/tendo look <url>` for browser eyes and hands.
 ```
 
-Tendo drives Chromium through Playwright (Node 20+). First use fetches it automatically; if that fails, install it once with `npx playwright install chromium`.
+Tendo drives Chromium through Playwright (Node 22.12+). First use fetches it automatically; if that fails, install it once with `npx playwright install chromium`.
 
 ## Usage
 

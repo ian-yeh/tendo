@@ -1,6 +1,6 @@
 {
   "name": "@ianyeh/tendo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publishConfig": {
     "access": "public"
   },
@@ -34,6 +34,9 @@
   ],
   "author": "Ian Yeh",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "homepage": "https://github.com/ian-yeh/tendo#readme",
   "repository": {
     "type": "git",

@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 
+import { readFileSync } from 'node:fs';
+
 import { Command } from 'commander';
 
 import { runLook, runAct, runSessions, runKill } from './commands/index.js';
+
+// Resolves to <pkg>/package.json from both dist/index.js and src/index.ts.
+const { version } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+) as { version: string };
 
 const program = new Command();
 
 program
   .name('tendo')
   .description('Tendo - eyes and hands for coding agents. Capture web page state and execute grounded actions. Zero setup.')
-  .version('2.0.0');
+  .version(version);
 
 program
   .command('look')

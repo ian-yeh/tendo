@@ -147,6 +147,3 @@ apps/api/tmp/
 *.tgz
 .eslintcache
 .prettiercache
-
-# Tendo capture output
-.tendo/

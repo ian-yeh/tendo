@@ -28,7 +28,7 @@ export function parseViewports(spec?: string): { width: number; height: number }
 
 export function defaultOutDir(base?: string): string {
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
-  return base ?? path.join(process.cwd(), '.tendo', stamp);
+  return base ?? path.join(os.tmpdir(), 'tendo', stamp);
 }
 
 export function buildCaptureOptions(flags: LookFlags): CaptureOptions {

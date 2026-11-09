@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "dev": "npm run dev --workspaces"
+    "dev": "npm run dev --workspaces",
+    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/browser && tsc --noEmit -p apps/cli",
+    "test": "node test/smoke.mjs"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

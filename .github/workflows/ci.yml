@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm ci
+        env:
+          TENDO_SKIP_CHROMIUM_INSTALL: 1
+      - run: npx playwright install --with-deps chromium
+      # --workspaces runs alphabetically (apps before packages), so build the dependency chain in order.
+      - run: |
+          npm run build --workspace=packages/core
+          npm run build --workspace=packages/browser
+          npm run build --workspace=apps/cli
+      - run: npm run typecheck
+      - run: npm test

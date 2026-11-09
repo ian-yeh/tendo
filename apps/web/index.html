@@ -4,13 +4,122 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tendo captures web page state and runs grounded browser actions for coding agents. No LLM, no API key, no config." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <title>Tendo - Browser eyes and hands for coding agents</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css" />
+    <title>tendo - browser eyes and hands for coding agents</title>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <header>
+      <a class="wordmark" href="/">tendo</a>
+      <nav>
+        <a href="https://github.com/ian-yeh/tendo">GitHub</a>
+        <a href="https://www.npmjs.com/package/@ianyeh/tendo">npm</a>
+        <a href="https://github.com/ian-yeh/tendo#readme">Docs</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Browser eyes and hands for coding agents.</h1>
+      <p class="lede">
+        Tendo captures what a web page looks like (screenshots, an element map, console and network errors)
+        and clicks or types on it by element id. It ships no LLM. Your agent does the looking and the thinking;
+        Tendo sees and acts. No API key, no config.
+      </p>
+
+      <div class="cmd">
+        <code><span class="prompt">$</span> npx -y @ianyeh/tendo look &lt;url&gt;</code>
+        <button type="button" data-copy="npx -y @ianyeh/tendo look ">copy</button>
+      </div>
+      <p class="note">Node 22.12+. Chromium is fetched on first use.</p>
+
+      <h2>Give your agent the skill</h2>
+      <p>The skill teaches Claude Code, Codex, and friends when and how to reach for tendo. That is the whole setup.</p>
+      <div class="cmd">
+        <code><span class="prompt">$</span> npx skills add ian-yeh/tendo --skill tendo -g</code>
+        <button type="button" data-copy="npx skills add ian-yeh/tendo --skill tendo -g">copy</button>
+      </div>
+      <p class="note">Drop <code>-g</code> to install for the current project only.</p>
+
+      <h2>What your agent sees</h2>
+      <p>Real output, trimmed. Screenshots go to disk; only their paths reach the agent.</p>
+<pre class="term"><span class="prompt">$</span> <span class="in">tendo look https://the-internet.herokuapp.com/login --session demo --annotate</span>
+session      demo
+url          https://the-internet.herokuapp.com/login
+title        The Internet
+screenshots:
+  1280x720: /tmp/tendo/20261109225805/shot-1280.png
+  1280x720 (annotated): /tmp/tendo/20261109225805/shot-1280-annotated.png
+elements[6]{id,role,name,bbox}:
+  <b>1</b>,link,"The Internet: home",[0,0,196,70]
+  <b>2</b>,textbox,"Username",[156,334,469,32]
+  <b>3</b>,textbox,"Password",[156,397,469,32]
+  <b>4</b>,button,"Login",[156,443,164,59]
+  <b>5</b>,link,"Elemental Selenium",[565,590,123,18]
+  <b>6</b>,link,"Sauce Labs",[719,590,71,18]
+failedRequests[1]:
+  ERR GET https://298279967.log.optimizely.com/event
+hints:
+  - If no visual check is needed, re-run with --text-only next time (no screenshot, cheaper).
+
+<span class="prompt">$</span> <span class="in">tendo act --session demo --element 2 --type "tomsmith"</span>
+outcome      ok
+action       type "tomsmith" in element <b>2</b> ("Username")
+<span class="dim">...</span>
+
+<span class="prompt">$</span> <span class="in">tendo act --session demo "click the login button"</span>
+outcome      ok
+action       click "Login"
+
+session      demo
+url          https://the-internet.herokuapp.com/secure
+elements[5]{id,role,name,bbox}:
+  <b>1</b>,link,"The Internet: home",[0,0,196,70]
+  <b>2</b>,link,"Close",[1100,108,18,9]
+  <b>3</b>,link,"Logout",[156,352,102,48]
+<span class="dim">  ...</span></pre>
+      <p>
+        Every <code>act</code> returns the new page state, never a bare "Done". Targets are an element id
+        from the last capture or a plain-language clause. If the page changed, you get <code>not_found</code> or
+        ranked <code>ambiguous</code> candidates instead of a wrong click.
+      </p>
+
+      <h2>When to use it</h2>
+      <p>On clean semantic HTML, a plain DOM tool is cheaper. Tendo earns its keep when the DOM is not the whole story:</p>
+      <ul>
+        <li><strong>Canvas, WebGL, video.</strong> Charts, maps, games, design tools. Nothing to select, only pixels.</li>
+        <li><strong>Visual checks.</strong> Does the total render, line up, have enough contrast, and stay put on load.</li>
+        <li><strong>Getting to a starting state.</strong> <code>--after "type email, click sign in"</code> primes a page in one call.</li>
+        <li><strong>Long sessions.</strong> <code>--session &lt;id&gt;</code> keeps the browser alive between agent turns, reaped after 10 minutes idle.</li>
+      </ul>
+
+      <h2>Commands</h2>
+      <dl>
+        <dt>look &lt;url&gt;</dt>
+        <dd>Capture page state: screenshots on disk, element map, diagnostics. Climb from <code>--text-only</code> to <code>--annotate</code> only when you need pixels.</dd>
+        <dt>act &lt;url | --session id&gt; &lt;action&gt;</dt>
+        <dd>Run one grounded action and return the new page state.</dd>
+        <dt>sessions</dt>
+        <dd>List live browser sessions and their idle TTL.</dd>
+        <dt>kill &lt;id&gt; | --all</dt>
+        <dd>Close one session or all of them.</dd>
+      </dl>
+    </main>
+
+    <footer>
+      MIT licensed. <a href="https://github.com/ian-yeh/tendo">github.com/ian-yeh/tendo</a>
+    </footer>
+
+    <script type="module">
+      for (const b of document.querySelectorAll('[data-copy]')) {
+        b.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(b.dataset.copy)
+          b.textContent = 'copied'
+          setTimeout(() => (b.textContent = 'copy'), 1500)
+        })
+      }
+    </script>
   </body>
 </html>

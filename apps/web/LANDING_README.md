@@ -26,15 +26,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the page.
 npm run build --workspace=@tendo/web
 ```
 
-## Design Direction
+## Design
 
-- **Aesthetic**: Direction-bold minimalist. Pure black and white, elegant and powerful.
-- **Typography**: IBM Plex Mono (headlines) + IBM Plex Sans (body)
-- **Motion**: Purposeful, subtle animations via Framer Motion
-- **Philosophy**: "Action compounds, panic does not" - a testament to builders who care.
+One static `index.html` plus `style.css`, built with Vite. No framework, no animations.
+Install command first, then a real `look` / `act` transcript, a short feature list, and
+links to GitHub, npm, and the README. Light and dark follow `prefers-color-scheme`.
 
-The page showcases:
-- What Tendo is (browser eyes and hands for external AI agents)
-- Key features (grounded element mapping, daemon sessions, token-minimal output)
-- Why it matters (performance and token economics benchmarks)
-- Links to GitHub and documentation
+The transcript is trimmed real CLI output. Refresh it from a real run when the output format changes.

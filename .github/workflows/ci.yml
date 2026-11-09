@@ -20,6 +20,10 @@ jobs:
         env:
           TENDO_SKIP_CHROMIUM_INSTALL: 1
       - run: npx playwright install --with-deps chromium
-      - run: npm run build --workspaces
+      # --workspaces runs alphabetically (apps before packages), so build the dependency chain in order.
+      - run: |
+          npm run build --workspace=packages/core
+          npm run build --workspace=packages/browser
+          npm run build --workspace=apps/cli
       - run: npm run typecheck
       - run: npm test

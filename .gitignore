@@ -147,3 +147,4 @@ apps/api/tmp/
 *.tgz
 .eslintcache
 .prettiercache
+.claude/worktrees/
